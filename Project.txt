@@ -1,0 +1,61 @@
+function [rr, cr] = mrank(A) %Column and Row Rank of Matrix
+
+%% Fonksiyon komutu oluþturduk. rr,cr çýkýþlar, “mrank” fonksiyon adý, “A” input.
+
+H=A;
+   sizeofH = [0, 0];      %size of H matrix
+   for a = H'   
+      sizeofH(1) = sizeofH(1) + 1;
+   end
+   for a = H
+      sizeofH(2) = sizeofH(2) + 1;
+   end    
+   m=sizeofH(1);
+   n=sizeofH(2);
+
+%%  Üzerinde iþlem yapacaðýmýz H diye matris yaratýp, onu A matrisine eþitledik.
+%%  Bu matrisin kaça kaç olduðunu bulmak için, ilk olarak bu matrisin transpose’unun dikey elemanlarýný saydýk. Daha sonra normal halinin dikey elemanlarýný saydýk. Bu iþlemler “size(H)” fonksiyonunun aynýsýdýr.
+% REDUCED ROW ECHELON FORM
+% Loop over the entire matrix.
+i = 1;
+j = 1;
+pvtc = [];
+while (i <= m) && (j <= n)
+   % Find value and index of largest element in the remainder of column j.
+   absT=sqrt(H(i:m,j).^2); % abs(H(i:m,j))
+   [p,k] = max(absT); %p is max, k is min in the column
+   k = k+i-1;
+   if (p <= sqrt(0.000000000000000001)) % tolerance value
+      % The column is negligible, zero it out.
+      H(i:m,j) = zeros(m-i+1,1);
+      j = j + 1;
+   else
+      % Remember column index
+      pvtc = [pvtc j];
+      % Swap i-th and k-th rows.
+      H([i k],j:n) = H([k i],j:n);
+      % Divide the pivot row by the pivot element.
+      H(i,j:n) = H(i,j:n)/H(i,j);
+      % Subtract multiples of the pivot row from all the other rows.
+      for k = [1:i-1 i+1:m]
+         H(k,j:n) = H(k,j:n) - H(k,j)*H(i,j:n);
+      end
+      i = i + 1;
+      j = j + 1;
+   end
+end
+
+%%  Burada elimizdeki H matrisine Reduced Row Echelon Form iþlemini uyguladýk. Bir önceki iþlemde bulduðumuz size deðerlerini, burada döngüde kullanacaðýz. Reduced row echelon form iþlemi uyguluyoruz ki pivot columnlarý bulalým.
+%% rref iþlemindeki döngü içinde, ilk olarak H matrisindeki min (k) ve max(p) deðerleri buluyoruz. Kendi belirlediðimiz tolerans deðeri atayarak, o deðerinde altýndaki kolonlarý sýfýrlýyoruz. Daha sonra pivot columnlarý bulmak için, change, bölme ve çýkarma iþlemleri uyguluyoruz. “rref(H)” hazýr fonksiyonunun açýk halini bu þekilde uygulamýþ oluyoruz. Buradan çýkan H fonksiyonu reduced row echelon form halidir.
+Bu iþlem sýrasýnda ayný zamanda pivot çolumnlarý da buluyoruz. 
+
+C = A(:, pvtc); %Column basis
+cr=0; 
+   for h = C
+      cr = cr + 1; % Column rank
+   end 
+rr = cr; % Row rank is equal to column rank  (Proof: http://ocw.mit.edu/courses/mathematics/18-701-algebra-i-fall-2010/study-materials/MIT18_701F10_rrk_crk.pdf) 
+
+%% Yukarýdaki kýsýmda da, pivot column numaralarýný bulduk. Bu kolonlardan bir matris oluþturuyoruz. Oluþan bu matrisin rank’ýný bulduðumuzda bu column rank oluyor. Rank bulmak için küçük bir döngü yazýyoruz. Size iþleminin tek boyutlusu gibi düþünebiliriz. Elemanlarý sayarak Column Rank’ý buluyoruz. Column rank ayný zamanda Row Rank’a eþit olduðu için, rr deðiþkenini de cr deðerine eþitliyoruz. Cr ile Rr ‘nin birbirine eþit olduðunu kanýtlayan bir referans linki de parantez içinde verilmiþtir.
+
+
